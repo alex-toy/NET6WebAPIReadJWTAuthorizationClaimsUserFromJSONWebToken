@@ -3,10 +3,7 @@ using JwtWebApiApp.Models;
 using JwtWebApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 
 namespace JwtWebApiApp.Controllers
 {
@@ -17,11 +14,13 @@ namespace JwtWebApiApp.Controllers
         public static User user = new User();
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
+        private readonly ITokenService _tokenService;
 
-        public AuthController(IConfiguration configuration, IUserService userService)
+        public AuthController(IConfiguration configuration, IUserService userService, ITokenService tokenService)
         {
             _configuration = configuration;
             _userService = userService;
+            _tokenService = tokenService;
         }
 
         [HttpGet, Authorize]
@@ -36,7 +35,7 @@ namespace JwtWebApiApp.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDto request)
         {
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            _tokenService.CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
             user.Username = request.Username;
             user.PasswordHash = passwordHash;
@@ -50,12 +49,12 @@ namespace JwtWebApiApp.Controllers
         {
             if (user.Username != request.Username) return BadRequest("User not found.");
 
-            bool passwordOK = VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt);
+            bool passwordOK = _tokenService.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt);
             if (!passwordOK) return BadRequest("Wrong password.");
 
-            string token = CreateToken(user);
+            string token = _tokenService.CreateToken(user);
 
-            var refreshToken = GenerateRefreshToken();
+            var refreshToken = _tokenService.GenerateRefreshToken();
             SetRefreshToken(refreshToken);
 
             return Ok(token);
@@ -72,26 +71,23 @@ namespace JwtWebApiApp.Controllers
             bool tokenExpired = user.TokenExpires < DateTime.Now;
             if (tokenExpired) return Unauthorized("Token expired.");
 
-            string token = CreateToken(user);
-            var newRefreshToken = GenerateRefreshToken();
+            string token = _tokenService.CreateToken(user);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
             SetRefreshToken(newRefreshToken);
 
             return Ok(token);
         }
 
-        private RefreshToken GenerateRefreshToken()
+        private void SetRefreshToken(RefreshToken newRefreshToken)
         {
-            var refreshToken = new RefreshToken
-            {
-                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                Expires = DateTime.Now.AddDays(7),
-                Created = DateTime.Now
-            };
+            AddCookieToResponse(newRefreshToken);
 
-            return refreshToken;
+            user.RefreshToken = newRefreshToken.Token;
+            user.TokenCreated = newRefreshToken.Created;
+            user.TokenExpires = newRefreshToken.Expires;
         }
 
-        private void SetRefreshToken(RefreshToken newRefreshToken)
+        private void AddCookieToResponse(RefreshToken newRefreshToken)
         {
             var cookieOptions = new CookieOptions
             {
@@ -99,57 +95,6 @@ namespace JwtWebApiApp.Controllers
                 Expires = newRefreshToken.Expires
             };
             Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
-
-            user.RefreshToken = newRefreshToken.Token;
-            user.TokenCreated = newRefreshToken.Created;
-            user.TokenExpires = newRefreshToken.Expires;
-        }
-
-        private string CreateToken(User user)
-        {
-            List<Claim> claims = GetClaims(user);
-
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
-                _configuration.GetSection("AppSettings:Token").Value));
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: creds);
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return jwt;
-        }
-
-        private static List<Claim> GetClaims(User user)
-        {
-            return new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin"),
-                new Claim("expires", user.TokenExpires.ToString())
-            };
-        }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
-        }
-
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512(passwordSalt))
-            {
-                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(passwordHash);
-            }
         }
     }
 }
