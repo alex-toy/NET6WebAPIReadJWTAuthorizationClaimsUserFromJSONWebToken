@@ -13,6 +13,7 @@ namespace CustomerAPI.Controllers
     public class UserMasterController : ControllerBase
     {
         private readonly Learn_DBContext context;
+
         public UserMasterController(Learn_DBContext learn_DB)
         {
             context = learn_DB;
@@ -105,6 +106,5 @@ namespace CustomerAPI.Controllers
             }
             return new APIResponse { keycode = string.Empty, result = result };
         }
-
     }
 }

@@ -214,7 +214,5 @@ namespace CustomerAPI.Controllers
             else
                 return hosturl + "/Uploads/Common/noimage.png";
         }
-       
-       
     }
 }
