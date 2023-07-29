@@ -11,13 +11,19 @@ namespace JwtWebApiApp.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public string GetMyName()
+        public string GetName()
         {
-            var result = string.Empty;
-            if (_httpContextAccessor.HttpContext != null)
-            {
-                result = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Name);
-            }
+            if (_httpContextAccessor.HttpContext == null) return string.Empty;
+
+            string? result = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            return result;
+        }
+
+        public string Get(string claim)
+        {
+            if (_httpContextAccessor.HttpContext == null) return string.Empty;
+
+            string? result = _httpContextAccessor.HttpContext.User.FindFirstValue(claim);
             return result;
         }
     }

@@ -27,8 +27,10 @@ namespace JwtWebApiApp.Controllers
         [HttpGet, Authorize]
         public ActionResult<string> GetMe()
         {
-            var userName = _userService.GetMyName();
-            return Ok(userName);
+            var userName = _userService.Get(ClaimTypes.Name);
+            var role = _userService.Get(ClaimTypes.Role);
+            var tokenExpires = _userService.Get("expires");
+            return Ok(new { userName = userName, role = role, tokenExpires = tokenExpires });
         }
 
         [HttpPost("register")]
@@ -46,15 +48,10 @@ namespace JwtWebApiApp.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDto request)
         {
-            if (user.Username != request.Username)
-            {
-                return BadRequest("User not found.");
-            }
+            if (user.Username != request.Username) return BadRequest("User not found.");
 
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-            {
-                return BadRequest("Wrong password.");
-            }
+            bool passwordOK = VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt);
+            if (!passwordOK) return BadRequest("Wrong password.");
 
             string token = CreateToken(user);
 
@@ -116,7 +113,8 @@ namespace JwtWebApiApp.Controllers
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Role, "Admin"),
+                new Claim("expires", user.TokenExpires.ToString())
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
