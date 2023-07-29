@@ -40,6 +40,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
+
 builder.Services.AddCors(options => options.AddPolicy(name: "NgOrigins",
     policy =>
     {

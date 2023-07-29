@@ -11,4 +11,5 @@ Swashbuckle.AspNetCore.Filters
 System.IdentityModel.Tokens.Jwt
 ```
 
-<img src="/pictures/user_secret2.png" title="user secret"  width="900">
+- register a new user
+<img src="/pictures/register.png" title="register a new user"  width="900">
