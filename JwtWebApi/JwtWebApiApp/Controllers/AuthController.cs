@@ -66,14 +66,11 @@ namespace JwtWebApiApp.Controllers
         {
             var refreshToken = Request.Cookies["refreshToken"];
 
-            if (!user.RefreshToken.Equals(refreshToken))
-            {
-                return Unauthorized("Invalid Refresh Token.");
-            }
-            else if (user.TokenExpires < DateTime.Now)
-            {
-                return Unauthorized("Token expired.");
-            }
+            bool isRefreshTokenOK = user.RefreshToken.Equals(refreshToken);
+            if (!isRefreshTokenOK) return Unauthorized("Invalid Refresh Token.");
+
+            bool tokenExpired = user.TokenExpires < DateTime.Now;
+            if (tokenExpired) return Unauthorized("Token expired.");
 
             string token = CreateToken(user);
             var newRefreshToken = GenerateRefreshToken();
@@ -110,12 +107,7 @@ namespace JwtWebApiApp.Controllers
 
         private string CreateToken(User user)
         {
-            List<Claim> claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin"),
-                new Claim("expires", user.TokenExpires.ToString())
-            };
+            List<Claim> claims = GetClaims(user);
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
                 _configuration.GetSection("AppSettings:Token").Value));
@@ -130,6 +122,16 @@ namespace JwtWebApiApp.Controllers
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
+        }
+
+        private static List<Claim> GetClaims(User user)
+        {
+            return new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, "Admin"),
+                new Claim("expires", user.TokenExpires.ToString())
+            };
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)

@@ -29,3 +29,12 @@ System.IdentityModel.Tokens.Jwt
 <img src="/pictures/verify.png" title="verify signature"  width="900">
 
 ## Refresh tokens
+
+- get cookies
+<img src="/pictures/cookies.png" title="cookies"  width="900">
+
+- invalid refresh token
+<img src="/pictures/invalid_refresh_token.png" title="invalid refresh token"  width="900">
+
+- login again. Valid refresh token
+<img src="/pictures/valid_refresh_token.png" title="valid refresh token"  width="900">
