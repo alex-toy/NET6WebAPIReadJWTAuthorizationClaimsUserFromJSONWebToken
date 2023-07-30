@@ -1,5 +1,6 @@
 using CustomerAPI.Models;
 using CustomerAPI.Models.Authentication;
+using CustomerAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -40,6 +41,9 @@ namespace CustomerAPI
 
             AppDbContext _dbcontext = services.BuildServiceProvider().GetService<AppDbContext>();
             services.AddSingleton<IRefreshTokenGenerator>(provider => new RefreshTokenGenerator(_dbcontext));
+
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IUserService, UserService>();
 
             IConfigurationSection _jwtsetting = Configuration.GetSection("JWTSetting");
             services.Configure<JWTSetting>(_jwtsetting);

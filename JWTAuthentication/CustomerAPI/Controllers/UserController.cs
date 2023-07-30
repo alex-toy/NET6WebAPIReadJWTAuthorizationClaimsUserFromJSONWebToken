@@ -1,13 +1,11 @@
 ﻿using CustomerAPI.Models;
 using CustomerAPI.Models.Authentication;
+using CustomerAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 
 namespace CustomerAPI.Controllers
 {
@@ -15,82 +13,37 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly AppDbContext context;
-        private readonly JWTSetting setting;
+        private readonly AppDbContext _appDbContext;
         private readonly IRefreshTokenGenerator _tokenGenerator;
+        private readonly ITokenService _tokenService;
+        private readonly IUserService _userService;
 
-        public UserController(AppDbContext learn_DB, IOptions<JWTSetting> options, IRefreshTokenGenerator _refreshToken)
+        public UserController(AppDbContext learn_DB, IRefreshTokenGenerator _refreshToken, ITokenService tokenService, IUserService userService)
         {
-            context = learn_DB;
-            setting = options.Value;
+            _appDbContext = learn_DB;
             _tokenGenerator = _refreshToken;
+            _tokenService = tokenService;
+            _userService = userService;
         }
 
         [NonAction]
         public TokenResponse Authenticate(string username,Claim[] claims)
         {
-            TokenResponse tokenResponse = new TokenResponse();
-            var tokenkey = Encoding.UTF8.GetBytes(setting.securitykey);
-            var tokenhandler = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(15),
-                 signingCredentials: new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256)
-
-                );
-            tokenResponse.JWTToken = new JwtSecurityTokenHandler().WriteToken(tokenhandler);
-            tokenResponse.RefreshToken = _tokenGenerator.GenerateToken(username);
-
-            return tokenResponse;
+            return _tokenService.GetToken(username, claims);
         }
 
         [Route("Authenticate")]
         [HttpPost]
         public IActionResult Authenticate([FromBody] UserCredential user)
         {
-            TblUser _user = GetUserFromDb(user);
+            TblUser _user = _userService.GetUserByCredentials(user);
             if (_user == null) return Unauthorized();
 
             TokenResponse tokenResponse = new TokenResponse();
-            tokenResponse.JWTToken = GenerateToken(_user);
-            tokenResponse.RefreshToken = _tokenGenerator.GenerateToken(user.username);
+            tokenResponse.JWTToken = _tokenService.GenerateToken(_user);
+            tokenResponse.RefreshToken = _tokenGenerator.GenerateRefreshToken(user.username);
 
             return Ok(tokenResponse);
-        }
-
-        private TblUser GetUserFromDb(UserCredential user)
-        {
-            return context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive == true);
-        }
-
-        private string GenerateToken(TblUser _user)
-        {
-            var tokenhandler = new JwtSecurityTokenHandler();
-            var tokenkey = Encoding.UTF8.GetBytes(setting.securitykey);
-            var tokenDescriptor = GetTokenDescriptor(_user, tokenkey);
-            var token = tokenhandler.CreateToken(tokenDescriptor);
-            string finaltoken = tokenhandler.WriteToken(token);
-            return finaltoken;
-        }
-
-        private static SecurityTokenDescriptor GetTokenDescriptor(TblUser _user, byte[] tokenkey)
-        {
-            ClaimsIdentity claimsIdentity = GenerateClaims(_user);
-
-            return new SecurityTokenDescriptor
-            {
-                Subject = claimsIdentity,
-                Expires = DateTime.Now.AddMinutes(20),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256)
-            };
-        }
-
-        private static ClaimsIdentity GenerateClaims(TblUser _user)
-        {
-            return new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.Name, _user.Userid),
-                new Claim(ClaimTypes.Role, _user.Role)
-            });
         }
 
         [Route("Refresh")]
@@ -103,7 +56,7 @@ namespace CustomerAPI.Controllers
             var username = securityToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
 
             //var username = principal.Identity.Name;
-            var _reftable = context.TblRefreshtoken.FirstOrDefault(o => o.UserId == username && o.RefreshToken == token.RefreshToken);
+            var _reftable = _appDbContext.TblRefreshtoken.FirstOrDefault(o => o.UserId == username && o.RefreshToken == token.RefreshToken);
             if (_reftable == null)
             {
                 return Unauthorized();
@@ -116,8 +69,8 @@ namespace CustomerAPI.Controllers
         [HttpGet]
         public IActionResult GetMenubyRole(string role)
         {
-            var _result = (from q1 in context.TblPermission.Where(item=>item.RoleId==role)
-                          join q2 in context.TblMenu
+            var _result = (from q1 in _appDbContext.TblPermission.Where(item=>item.RoleId==role)
+                          join q2 in _appDbContext.TblMenu
                           on q1.MenuId equals q2.Id
                           select new { q1.MenuId, q2.Name, q2.LinkName }).ToList();
            // var _result = context.TblPermission.Where(o => o.RoleId == role).ToList();
@@ -131,7 +84,7 @@ namespace CustomerAPI.Controllers
         {
             APIResponse result = new APIResponse();
             //var username = principal.Identity.Name;
-            var _result = context.TblPermission.Where(o => o.RoleId == role && o.MenuId == menu).FirstOrDefault();
+            var _result = _appDbContext.TblPermission.Where(o => o.RoleId == role && o.MenuId == menu).FirstOrDefault();
             if (_result != null)
             {
                 result.result = "pass";
@@ -143,7 +96,7 @@ namespace CustomerAPI.Controllers
         [HttpGet]
         public IActionResult GetAllRole()
         {
-            var _result = context.TblRole.ToList();
+            var _result = _appDbContext.TblRole.ToList();
             // var _result = context.TblPermission.Where(o => o.RoleId == role).ToList();
 
             return Ok(_result);
@@ -155,14 +108,14 @@ namespace CustomerAPI.Controllers
             string result = string.Empty;
             try
             {
-                var _emp = context.TblUser.FirstOrDefault(o => o.Userid == value.Userid);
+                TblUser _emp = _userService.GetUserById(value.Userid);
                 if (_emp != null)
                 {
                     result = string.Empty;
                 }
                 else
                 {
-                    SaveUserInDb(value);
+                    _userService.SaveUserInDb(value);
                     result = "pass";
                 }
             }
@@ -171,21 +124,6 @@ namespace CustomerAPI.Controllers
                 result = string.Empty;
             }
             return new APIResponse { keycode = string.Empty, result = result };
-        }
-
-        private void SaveUserInDb(TblUser value)
-        {
-            TblUser tblUser = new TblUser()
-            {
-                Name = value.Name,
-                Email = value.Email,
-                Userid = value.Userid,
-                Role = string.Empty,
-                Password = value.Password,
-                IsActive = false
-            };
-            context.TblUser.Add(tblUser);
-            context.SaveChanges();
         }
     }
 }

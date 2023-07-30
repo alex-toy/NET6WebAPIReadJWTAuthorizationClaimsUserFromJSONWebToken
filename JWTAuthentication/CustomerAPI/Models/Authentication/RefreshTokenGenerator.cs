@@ -12,7 +12,8 @@ namespace CustomerAPI.Models.Authentication
         {
             context = learn_DB;
         }
-        public string GenerateToken(string username)
+
+        public string GenerateRefreshToken(string username)
         {
             var randomnumber = new byte[32];
             using (var randomnumbergenerator = RandomNumberGenerator.Create())
