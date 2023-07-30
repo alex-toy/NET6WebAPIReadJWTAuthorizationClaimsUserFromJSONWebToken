@@ -1,6 +1,8 @@
 ﻿using CustomerAPI.Models;
+using CustomerAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,10 +16,12 @@ namespace CustomerAPI.Controllers
     public class CustomerController : ControllerBase
     {
         private readonly AppDbContext appDbContext;
+        private readonly ICustomerService _customerService;
 
-        public CustomerController(AppDbContext learn_DB)
+        public CustomerController(AppDbContext learn_DB, ICustomerService customerService)
         {
             appDbContext = learn_DB;
+            _customerService = customerService;
         }
 
         // GET: api/<CustomerController>
@@ -36,8 +40,30 @@ namespace CustomerAPI.Controllers
 
         // POST api/<CustomerController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public APIResponse Post([FromBody] TblCustomer customer)
         {
+            string result = string.Empty;
+            try
+            {
+                TblCustomer customerDb = _customerService.GetCustomerById(customer.Id);
+
+                bool customerExists = customerDb != null;
+                if (customerExists)
+                {
+                    result = _customerService.UpdateCustomer(customer, customerDb);
+                }
+                else
+                {
+                    _customerService.AddCustomer(customer);
+                    result = "pass";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result = string.Empty;
+            }
+            return new APIResponse { keycode = string.Empty, result = result };
         }
 
         // PUT api/<CustomerController>/5
