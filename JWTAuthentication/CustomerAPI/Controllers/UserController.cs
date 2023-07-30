@@ -17,13 +17,13 @@ namespace CustomerAPI.Controllers
     {
         private readonly AppDbContext context;
         private readonly JWTSetting setting;
-        private readonly IRefreshTokenGenerator tokenGenerator;
+        private readonly IRefreshTokenGenerator _tokenGenerator;
 
         public UserController(AppDbContext learn_DB, IOptions<JWTSetting> options, IRefreshTokenGenerator _refreshToken)
         {
             context = learn_DB;
             setting = options.Value;
-            tokenGenerator = _refreshToken;
+            _tokenGenerator = _refreshToken;
         }
 
         [NonAction]
@@ -38,7 +38,7 @@ namespace CustomerAPI.Controllers
 
                 );
             tokenResponse.JWTToken = new JwtSecurityTokenHandler().WriteToken(tokenhandler);
-            tokenResponse.RefreshToken = tokenGenerator.GenerateToken(username);
+            tokenResponse.RefreshToken = _tokenGenerator.GenerateToken(username);
 
             return tokenResponse;
         }
@@ -47,16 +47,19 @@ namespace CustomerAPI.Controllers
         [HttpPost]
         public IActionResult Authenticate([FromBody] UserCredential user)
         {
-            TokenResponse tokenResponse = new TokenResponse();
-            var _user = context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive == true);
+            TblUser _user = GetUserFromDb(user);
             if (_user == null) return Unauthorized();
 
-            string finaltoken = GenerateToken(_user);
-
-            tokenResponse.JWTToken = finaltoken;
-            tokenResponse.RefreshToken = tokenGenerator.GenerateToken(user.username);
+            TokenResponse tokenResponse = new TokenResponse();
+            tokenResponse.JWTToken = GenerateToken(_user);
+            tokenResponse.RefreshToken = _tokenGenerator.GenerateToken(user.username);
 
             return Ok(tokenResponse);
+        }
+
+        private TblUser GetUserFromDb(UserCredential user)
+        {
+            return context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive == true);
         }
 
         private string GenerateToken(TblUser _user)
@@ -98,7 +101,6 @@ namespace CustomerAPI.Controllers
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityToken = (JwtSecurityToken)tokenHandler.ReadToken(token.JWTToken);
             var username = securityToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-           
 
             //var username = principal.Identity.Name;
             var _reftable = context.TblRefreshtoken.FirstOrDefault(o => o.UserId == username && o.RefreshToken == token.RefreshToken);
@@ -160,17 +162,7 @@ namespace CustomerAPI.Controllers
                 }
                 else
                 {
-                    TblUser tblUser = new TblUser()
-                    {
-                        Name = value.Name,
-                        Email = value.Email,
-                        Userid = value.Userid,
-                        Role = string.Empty,
-                        Password = value.Password,
-                        IsActive = false
-                    };
-                    context.TblUser.Add(tblUser);
-                    context.SaveChanges();
+                    SaveUserInDb(value);
                     result = "pass";
                 }
             }
@@ -181,5 +173,19 @@ namespace CustomerAPI.Controllers
             return new APIResponse { keycode = string.Empty, result = result };
         }
 
+        private void SaveUserInDb(TblUser value)
+        {
+            TblUser tblUser = new TblUser()
+            {
+                Name = value.Name,
+                Email = value.Email,
+                Userid = value.Userid,
+                Role = string.Empty,
+                Password = value.Password,
+                IsActive = false
+            };
+            context.TblUser.Add(tblUser);
+            context.SaveChanges();
+        }
     }
 }

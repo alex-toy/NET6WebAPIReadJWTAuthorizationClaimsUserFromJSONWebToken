@@ -39,7 +39,6 @@ namespace CustomerAPI
             });
 
             AppDbContext _dbcontext = services.BuildServiceProvider().GetService<AppDbContext>();
-
             services.AddSingleton<IRefreshTokenGenerator>(provider => new RefreshTokenGenerator(_dbcontext));
 
             IConfigurationSection _jwtsetting = Configuration.GetSection("JWTSetting");
@@ -53,7 +52,6 @@ namespace CustomerAPI
                 item.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(item =>
             {
-
                 item.RequireHttpsMetadata = true;
                 item.SaveToken = true;
                 item.TokenValidationParameters = new TokenValidationParameters()
@@ -98,12 +96,12 @@ namespace CustomerAPI
 
             app.UseCors("CorsPolicy");
 
-            app.UseStaticFiles();
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Uploads")),
-                RequestPath = new PathString("/Uploads")
-            });
+            //app.UseStaticFiles();
+            //app.UseStaticFiles(new StaticFileOptions()
+            //{
+            //    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Uploads")),
+            //    RequestPath = new PathString("/Uploads")
+            //});
 
             app.UseHttpsRedirection();
 

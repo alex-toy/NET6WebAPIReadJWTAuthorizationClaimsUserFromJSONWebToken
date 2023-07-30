@@ -49,4 +49,13 @@ Microsoft.EntityFrameworkCore
 Microsoft.EntityFrameworkCore.Tools
 Microsoft.EntityFrameworkCore.SqlServer
 Microsoft.AspNetCore.Authentication.JwtBearer
+Swashbuckle.AspNetCore
+Swashbuckle.AspNetCore.Swagger
+Swashbuckle.AspNetCore.SwaggerUI
+```
+
+### In the Package Manager Console :
+```
+Add-Migration InitialCreate
+Update-Database
 ```
