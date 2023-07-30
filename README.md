@@ -68,5 +68,5 @@ Update-Database
 - authenticate
 <img src="/pictures/authenticate.png" title="authenticate"  width="900">
 
-- login again. Valid refresh token
-<img src="/pictures/valid_refresh_token.png" title="valid refresh token"  width="900">
+- retrieve token
+<img src="/pictures/token.png" title="retrieve token"  width="900">

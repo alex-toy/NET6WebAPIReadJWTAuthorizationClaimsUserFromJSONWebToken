@@ -46,7 +46,8 @@ namespace CustomerAPI.Services
         {
             return new ClaimsIdentity(new Claim[]
             {
-                new Claim(ClaimTypes.Name, _user.Userid),
+                new Claim(ClaimTypes.Name, _user.Name),
+                new Claim(ClaimTypes.NameIdentifier, _user.Userid),
                 new Claim(ClaimTypes.Role, _user.Role)
             });
         }

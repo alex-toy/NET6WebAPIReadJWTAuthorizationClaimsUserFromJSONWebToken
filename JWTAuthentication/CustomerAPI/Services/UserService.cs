@@ -19,7 +19,7 @@ namespace CustomerAPI.Services
                 Name = user.Name,
                 Email = user.Email,
                 Userid = user.Userid,
-                Role = string.Empty,
+                Role = user.Role,
                 Password = user.Password,
                 IsActive = false
             };
