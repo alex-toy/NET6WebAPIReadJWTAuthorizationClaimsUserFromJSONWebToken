@@ -41,7 +41,7 @@ namespace CustomerAPI.Controllers
 
             TokenResponse tokenResponse = new TokenResponse();
             tokenResponse.JWTToken = _tokenService.GenerateToken(_user);
-            tokenResponse.RefreshToken = _tokenGenerator.GenerateRefreshToken(user.username);
+            tokenResponse.RefreshToken = _tokenGenerator.GenerateRefreshToken(user.Name);
 
             return Ok(tokenResponse);
         }

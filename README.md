@@ -54,8 +54,19 @@ Swashbuckle.AspNetCore.Swagger
 Swashbuckle.AspNetCore.SwaggerUI
 ```
 
-### In the Package Manager Console :
+### In the Package Manager Console
 ```
 Add-Migration InitialCreate
 Update-Database
 ```
+
+### Use API
+
+- register user
+<img src="/pictures/register_user.png" title="register user"  width="900">
+
+- invalid refresh token
+<img src="/pictures/invalid_refresh_token.png" title="invalid refresh token"  width="900">
+
+- login again. Valid refresh token
+<img src="/pictures/valid_refresh_token.png" title="valid refresh token"  width="900">
