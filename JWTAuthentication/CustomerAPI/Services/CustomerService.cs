@@ -1,4 +1,5 @@
 ﻿using CustomerAPI.Models;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CustomerAPI.Services
@@ -40,6 +41,11 @@ namespace CustomerAPI.Services
         public TblCustomer GetCustomerById(int customerId)
         {
             return _appDbContext.TblCustomer.FirstOrDefault(o => o.Id == customerId);
+        }
+
+        public IEnumerable<TblCustomer> GetAll()
+        {
+            return _appDbContext.TblCustomer.ToList();
         }
     }
 }

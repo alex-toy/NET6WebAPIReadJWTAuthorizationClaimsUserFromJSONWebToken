@@ -70,3 +70,9 @@ Update-Database
 
 - retrieve token
 <img src="/pictures/token.png" title="retrieve token"  width="900">
+
+- create customer
+<img src="/pictures/customer.png" title="create customer"  width="900">
+
+- get customer
+<img src="/pictures/customer2.png" title="get customer"  width="900">

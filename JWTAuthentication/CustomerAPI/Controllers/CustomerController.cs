@@ -15,27 +15,26 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private readonly AppDbContext appDbContext;
+        private readonly AppDbContext _appDbContext;
         private readonly ICustomerService _customerService;
 
         public CustomerController(AppDbContext learn_DB, ICustomerService customerService)
         {
-            appDbContext = learn_DB;
+            _appDbContext = learn_DB;
             _customerService = customerService;
         }
 
         // GET: api/<CustomerController>
-        [HttpGet]
+        [HttpGet("get")]
         public IEnumerable<TblCustomer> Get()
         {
-            return appDbContext.TblCustomer.ToList();
+            return _customerService.GetAll();
         }
 
-        // GET api/<CustomerController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("getbyid/{id}")]
+        public TblCustomer Get(int id)
         {
-            return "value";
+            return _appDbContext.TblCustomer.FirstOrDefault(o => o.Id == id);
         }
 
         // POST api/<CustomerController>
@@ -57,7 +56,6 @@ namespace CustomerAPI.Controllers
                     _customerService.AddCustomer(customer);
                     result = "pass";
                 }
-
             }
             catch (Exception ex)
             {

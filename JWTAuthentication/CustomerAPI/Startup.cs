@@ -44,6 +44,7 @@ namespace CustomerAPI
 
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<ICustomerService, CustomerService>();
 
             IConfigurationSection _jwtsetting = Configuration.GetSection("JWTSetting");
             services.Configure<JWTSetting>(_jwtsetting);
