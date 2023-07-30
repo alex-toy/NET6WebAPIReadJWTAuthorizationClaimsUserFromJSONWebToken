@@ -13,16 +13,18 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private readonly Learn_DBContext context;
-        public CustomerController(Learn_DBContext learn_DB)
+        private readonly AppDbContext appDbContext;
+
+        public CustomerController(AppDbContext learn_DB)
         {
-            context = learn_DB;
+            appDbContext = learn_DB;
         }
+
         // GET: api/<CustomerController>
         [HttpGet]
         public IEnumerable<TblCustomer> Get()
         {
-            return context.TblCustomer.ToList();
+            return appDbContext.TblCustomer.ToList();
         }
 
         // GET api/<CustomerController>/5

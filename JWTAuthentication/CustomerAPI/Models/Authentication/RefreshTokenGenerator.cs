@@ -6,9 +6,9 @@ namespace CustomerAPI.Models.Authentication
 {
     public class RefreshTokenGenerator : IRefreshTokenGenerator
     {
-        private readonly Learn_DBContext context;
+        private readonly AppDbContext context;
 
-        public RefreshTokenGenerator(Learn_DBContext learn_DB)
+        public RefreshTokenGenerator(AppDbContext learn_DB)
         {
             context = learn_DB;
         }

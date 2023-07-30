@@ -11,8 +11,8 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        private readonly Learn_DBContext context;
-        public EmployeeController(Learn_DBContext learn_DB)
+        private readonly AppDbContext context;
+        public EmployeeController(AppDbContext learn_DB)
         {
             context = learn_DB;
         }

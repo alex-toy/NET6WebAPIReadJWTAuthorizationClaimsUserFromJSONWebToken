@@ -28,7 +28,7 @@ System.IdentityModel.Tokens.Jwt
 - verify signature
 <img src="/pictures/verify.png" title="verify signature"  width="900">
 
-## Refresh tokens
+### Refresh tokens
 
 - get cookies
 <img src="/pictures/cookies.png" title="cookies"  width="900">
@@ -38,3 +38,15 @@ System.IdentityModel.Tokens.Jwt
 
 - login again. Valid refresh token
 <img src="/pictures/valid_refresh_token.png" title="valid refresh token"  width="900">
+
+
+
+## ASP.NET CORE Web API - JWT Authentication (Refresh Token + Role Based + Entity Framework ) 
+
+### Packages
+```
+Microsoft.EntityFrameworkCore
+Microsoft.EntityFrameworkCore.Tools
+Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.AspNetCore.Authentication.JwtBearer
+```

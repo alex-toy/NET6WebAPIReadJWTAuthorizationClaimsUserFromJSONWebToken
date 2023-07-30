@@ -10,8 +10,8 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class DesignationController : ControllerBase
     {
-        private readonly Learn_DBContext context;
-        public DesignationController(Learn_DBContext learn_DB)
+        private readonly AppDbContext context;
+        public DesignationController(AppDbContext learn_DB)
         {
             context = learn_DB;
         }

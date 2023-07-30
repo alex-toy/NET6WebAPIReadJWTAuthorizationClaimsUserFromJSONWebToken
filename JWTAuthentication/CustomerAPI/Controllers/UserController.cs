@@ -1,4 +1,5 @@
 ﻿using CustomerAPI.Models;
+using CustomerAPI.Models.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -14,10 +15,11 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly Learn_DBContext context;
+        private readonly AppDbContext context;
         private readonly JWTSetting setting;
         private readonly IRefreshTokenGenerator tokenGenerator;
-        public UserController(Learn_DBContext learn_DB, IOptions<JWTSetting> options, IRefreshTokenGenerator _refreshToken)
+
+        public UserController(AppDbContext learn_DB, IOptions<JWTSetting> options, IRefreshTokenGenerator _refreshToken)
         {
             context = learn_DB;
             setting = options.Value;
@@ -46,32 +48,46 @@ namespace CustomerAPI.Controllers
         public IActionResult Authenticate([FromBody] UserCredential user)
         {
             TokenResponse tokenResponse = new TokenResponse();
-            var _user = context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive==true);
-            if (_user == null)
-                return Unauthorized();
+            var _user = context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive == true);
+            if (_user == null) return Unauthorized();
 
-            var tokenhandler = new JwtSecurityTokenHandler();
-            var tokenkey = Encoding.UTF8.GetBytes(setting.securitykey);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(
-                    new Claim[]
-                    {
-                        new Claim(ClaimTypes.Name, _user.Userid),
-                        new Claim(ClaimTypes.Role, _user.Role)
-
-                    }
-                ),
-                Expires = DateTime.Now.AddMinutes(20),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256)
-            };
-            var token = tokenhandler.CreateToken(tokenDescriptor);
-            string finaltoken = tokenhandler.WriteToken(token);
+            string finaltoken = GenerateToken(_user);
 
             tokenResponse.JWTToken = finaltoken;
             tokenResponse.RefreshToken = tokenGenerator.GenerateToken(user.username);
 
             return Ok(tokenResponse);
+        }
+
+        private string GenerateToken(TblUser _user)
+        {
+            var tokenhandler = new JwtSecurityTokenHandler();
+            var tokenkey = Encoding.UTF8.GetBytes(setting.securitykey);
+            var tokenDescriptor = GetTokenDescriptor(_user, tokenkey);
+            var token = tokenhandler.CreateToken(tokenDescriptor);
+            string finaltoken = tokenhandler.WriteToken(token);
+            return finaltoken;
+        }
+
+        private static SecurityTokenDescriptor GetTokenDescriptor(TblUser _user, byte[] tokenkey)
+        {
+            ClaimsIdentity claimsIdentity = GenerateClaims(_user);
+
+            return new SecurityTokenDescriptor
+            {
+                Subject = claimsIdentity,
+                Expires = DateTime.Now.AddMinutes(20),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256)
+            };
+        }
+
+        private static ClaimsIdentity GenerateClaims(TblUser _user)
+        {
+            return new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, _user.Userid),
+                new Claim(ClaimTypes.Role, _user.Role)
+            });
         }
 
         [Route("Refresh")]

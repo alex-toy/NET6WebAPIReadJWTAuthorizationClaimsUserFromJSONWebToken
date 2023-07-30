@@ -2,13 +2,13 @@
 
 namespace CustomerAPI.Models
 {
-    public partial class Learn_DBContext : DbContext
+    public partial class AppDbContext : DbContext
     {
-        public Learn_DBContext()
+        public AppDbContext()
         {
         }
 
-        public Learn_DBContext(DbContextOptions<Learn_DBContext> options)
+        public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }

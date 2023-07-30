@@ -12,9 +12,9 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class UserMasterController : ControllerBase
     {
-        private readonly Learn_DBContext context;
+        private readonly AppDbContext context;
 
-        public UserMasterController(Learn_DBContext learn_DB)
+        public UserMasterController(AppDbContext learn_DB)
         {
             context = learn_DB;
         }

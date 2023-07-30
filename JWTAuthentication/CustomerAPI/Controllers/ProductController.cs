@@ -15,9 +15,9 @@ namespace CustomerAPI.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        private readonly Learn_DBContext context;
+        private readonly AppDbContext context;
         private IWebHostEnvironment hostingEnv;
-        public ProductController(Learn_DBContext learn_DB, IWebHostEnvironment environment)
+        public ProductController(AppDbContext learn_DB, IWebHostEnvironment environment)
         {
             context = learn_DB;
             hostingEnv = environment;

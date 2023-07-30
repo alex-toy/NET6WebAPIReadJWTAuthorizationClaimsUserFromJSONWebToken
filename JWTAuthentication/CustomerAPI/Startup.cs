@@ -1,5 +1,6 @@
 using CustomerAPI.Models;
 using CustomerAPI.Models.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,8 +10,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
+using System.Text;
 
 namespace CustomerAPI
 {
@@ -28,16 +32,20 @@ namespace CustomerAPI
         {
             services.AddControllers();
 
-            services.AddDbContext<Learn_DBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("constring")));
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                string connectionString = Configuration.GetConnectionString("constring");
+                options.UseSqlServer(connectionString);
+            });
 
-            var _dbcontext = services.BuildServiceProvider().GetService<Learn_DBContext>();
+            AppDbContext _dbcontext = services.BuildServiceProvider().GetService<AppDbContext>();
 
             services.AddSingleton<IRefreshTokenGenerator>(provider => new RefreshTokenGenerator(_dbcontext));
 
-            var _jwtsetting = Configuration.GetSection("JWTSetting");
+            IConfigurationSection _jwtsetting = Configuration.GetSection("JWTSetting");
             services.Configure<JWTSetting>(_jwtsetting);
 
-            var authkey = Configuration.GetValue<string>("JWTSetting:securitykey");
+            string authkey = Configuration.GetValue<string>("JWTSetting:securitykey");
 
             services.AddAuthentication(item =>
             {
