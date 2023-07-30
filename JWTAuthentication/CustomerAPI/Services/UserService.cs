@@ -29,7 +29,8 @@ namespace CustomerAPI.Services
 
         public TblUser GetUserByCredentials(UserCredential user)
         {
-            TblUser userDb = _appDbContext.TblUser.FirstOrDefault(o => o.Userid == user.Name && o.Password == user.Password && o.IsActive == true);
+            //TblUser userDb = _appDbContext.TblUser.FirstOrDefault(o => o.Userid == user.Name && o.Password == user.Password && o.IsActive == true);
+            TblUser userDb = _appDbContext.TblUser.FirstOrDefault(u => user.Name == user.Name && u.Password == user.Password);
             return userDb;
         }
 

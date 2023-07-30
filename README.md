@@ -65,8 +65,8 @@ Update-Database
 - register user
 <img src="/pictures/register_user.png" title="register user"  width="900">
 
-- invalid refresh token
-<img src="/pictures/invalid_refresh_token.png" title="invalid refresh token"  width="900">
+- authenticate
+<img src="/pictures/authenticate.png" title="authenticate"  width="900">
 
 - login again. Valid refresh token
 <img src="/pictures/valid_refresh_token.png" title="valid refresh token"  width="900">
